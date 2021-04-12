@@ -1,0 +1,140 @@
+1. App (componente principal)
+
+import React,{Component} from 'react';
+import './style.css';
+import Routes from './routers';
+
+class App extends React.Component{
+    render(){
+        return(
+            <div className="app">
+                <Routes />
+            </div>
+        )
+    }
+}
+export default App;
+
+---------------------------------------------------
+2. Routers (Rotas)
+
+import React from 'react';
+import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import Header from './components/header';
+import Home from './pages/Home';
+import Filme from './pages/filme';
+import Erro from './pages/erro';
+
+const Routers = () => {  {/*MINHAS ROTAS*/}
+    return(
+        <BrowserRouter>
+          <Header/>
+          <Switch>
+             <Route exact path="/" component={Home}/> 
+             <Route exact path="/filme/:id" component={Filme}/> 
+             <Route path="*" component={Erro}/> 
+          </Switch>
+        </BrowserRouter>
+    );
+}
+-----------------------------------------------------
+3. Home
+
+import React, {Component} from 'react';
+import {Link} from 'react-router-dom';
+import './home.css';
+
+class Home extends React.Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            filmes: []
+        }
+        this.loadFilmes = this.loadFilmes.bind(this);
+    }
+
+    componentDidMount(){ //poderia ter feito tudo dentro do didMout mas resolvi fazer separado o metodo.
+        this.loadFilmes();        
+    }
+    
+    loadFilmes(){
+        //URL da API: 'https://sujeitoprogramador.com/r-api/?api=filmes';
+        let url = 'https://sujeitoprogramador.com/r-api/?api=filmes';
+		//Consumir a API
+        fetch(url)
+          .then((response) => response.json())
+            .then((myJson)=> {
+		  //opção 1	
+          /*let mystate = this.state;  
+          mystate.filmes = myJson;
+          this.setState(mystate);
+          //console.log(mystate.filmes);  */
+                    //OU     //opção 2
+           this.setState({filmes: myJson});
+           console.log(this.state.filmes);   
+        });
+    }
+
+    render(){
+        return(
+            <div className="container">
+                {/*COM MEU STATE CARREGADO BORA POPULAR O SITE COM O MAP...*/}
+                <div className="listafilmes">
+                   {this.state.filmes.map((filmes)=>{
+                      return(
+                        <article key={filmes.id} className="filme">
+                            <strong>{filmes.nome} </strong>
+                            <img src={filmes.foto} alt="capa" className="img"/>
+                            <Link to={`/filme/${filmes.id}`}>Acessar</Link>                            
+                        </article>
+                      )
+                    })}
+                </div>               
+            </div>
+        )
+    }
+}
+export default Home;
+
+----------------------------------------------------------
+4. Filme
+import React,{component} from 'react';
+import './filme.css';
+
+class Filme extends React.Component{    
+    constructor(props){
+        super(props);
+        this.state = {
+            filme: []
+        }
+    }
+    componentDidMount(){
+        const { id } = this.props.match.params; //pega o id que ta vindo no link no home <Link to={`/filme/${filmes.id}`}>Acessar</Link>
+        
+        //LINK API
+        let url = `https://sujeitoprogramador.com/r-api/?api=filmes/${id}`;
+        
+        //CONSUMIR API
+        fetch(url)
+          .then((r)=>r.json())
+             .then((json) => {
+                 this.setState({filme:json})
+                 console.log(json); //testar se o json venho carregado.
+             })
+    }
+
+    render(){
+        return(
+            <div className="sinopseFilme">
+                {/*AGORA É SO POPULAR A PAGINA COM O STATE CARREGADO COM O JSON*/}
+                <h1 > {this.state.filme.nome} </h1> 
+                <img src={this.state.filme.foto} />
+                {this.state.filme.length !== 0 && //If o state tiver valor então aparece a sinopse (para evitar da sinopse aparecer antes no f5)
+                   <h2>SINOPSE</h2> 
+                }  
+                {this.state.filme.sinopse}
+            </div>
+        )
+    }
+}
+export default Filme; 
